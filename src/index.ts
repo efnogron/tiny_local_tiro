@@ -6,3 +6,7 @@ const main = (): void => {
   };
   
   main();
+
+const { startApp } = require('./controllers/appController');
+
+startApp();

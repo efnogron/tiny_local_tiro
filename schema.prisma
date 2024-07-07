@@ -31,11 +31,12 @@ model User {
   @@map("users")
 }
 
-model Card {
+model Question {
   id                String              @id @default(uuid()) @db.Uuid
-  keyFact           String
+  type              QuestionType
+  keyFact           String?
   question          String
-  answer            String
+  answer            Answer[]
   extra             String?
   deck              Deck                @relation(fields: [deckId], references: [id])
   deckId            String              @db.Uuid
@@ -45,7 +46,21 @@ model Card {
   deletedAt         DateTime?
   ReviewInteraction ReviewInteraction[]
 
-  @@map("cards")
+  @@map("questions")
+}
+
+model Answer {
+  id                String              @id @default(uuid()) @db.Uuid
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  question          Question            @relation(fields: [questionId], references: [id])
+  questionId        String              @db.Uuid
+  deck              Deck                @relation(fields: [deckId], references: [id])
+  deckId            String              @db.Uuid
+  content           String
+  isCorrect         Boolean
+
+  @@map("answers")
 }
 
 model Deck {
@@ -53,7 +68,8 @@ model Deck {
   title             String
   description       String
   imageId           String
-  cards             Card[]
+  questions         Question[]
+  answers           Answer[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   creator           User?               @relation(fields: [userId], references: [id])
@@ -72,8 +88,8 @@ model CardSchedule {
   id                 String           @id @default(uuid()) @db.Uuid
   user               User             @relation(fields: [userId], references: [id])
   userId             String           @db.Uuid
-  card               Card             @relation(fields: [cardId], references: [id])
-  cardId             String           @db.Uuid
+  question           Question         @relation(fields: [questionId], references: [id])
+  questionId         String           @db.Uuid
   deck               Deck             @relation(fields: [deckId], references: [id])
   deckId             String           @db.Uuid
   deckSubscription   DeckSubscription @relation(fields: [deckSubscriptionId], references: [id])
@@ -93,7 +109,7 @@ model CardSchedule {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  @@unique([userId, cardId])
+  @@unique([userId, questionId])
   @@index([userId, due])
   @@map("cardschedules")
 }
@@ -149,8 +165,8 @@ model ReviewInteraction {
   updatedAt           DateTime              @updatedAt
   user                User                  @relation(fields: [userId], references: [id])
   userId              String                @db.Uuid
-  card                Card                  @relation(fields: [cardId], references: [id])
-  cardId              String                @db.Uuid
+  question            Question              @relation(fields: [questionId], references: [id])
+  questionId          String                @db.Uuid
   deck                Deck                  @relation(fields: [deckId], references: [id])
   deckId              String                @db.Uuid
   type                ReviewInteractionType
@@ -247,4 +263,11 @@ enum Unit {
   CHARACTER
   MINUTE
   SECOND
+}
+
+enum QuestionType {
+  FLASHCARD
+  MULTIPLE_CHOICE
+  SINGLE_CHOICE
+  CLOZE
 }
