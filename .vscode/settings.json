@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "tiro_terminal",
+            "database": "tiro_terminal",
+            "username": "luki",
+            "password": "nod0Ve2flOds9!"
+        }
+    ]
+}

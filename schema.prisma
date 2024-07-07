@@ -1,0 +1,250 @@
+// This is your Database schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Database Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+  // binaryTargets = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_DB_URL")
+}
+
+model User {
+  id                String              @id @default(uuid()) @db.Uuid
+  username          String              @unique
+  firstName         String
+  email             String              @unique
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  cardSchedules     CardSchedule[]
+  createdDecks      Deck[]
+  deckSubscriptions DeckSubscription[]
+  ReviewRun         ReviewRun[]
+  ReviewInteraction ReviewInteraction[]
+
+  @@map("users")
+}
+
+model Card {
+  id                String              @id @default(uuid()) @db.Uuid
+  keyFact           String
+  question          String
+  answer            String
+  extra             String?
+  deck              Deck                @relation(fields: [deckId], references: [id])
+  deckId            String              @db.Uuid
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  cardSchedules     CardSchedule[]
+  deletedAt         DateTime?
+  ReviewInteraction ReviewInteraction[]
+
+  @@map("cards")
+}
+
+model Deck {
+  id                String              @id @default(uuid()) @db.Uuid
+  title             String
+  description       String
+  imageId           String
+  cards             Card[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  creator           User?               @relation(fields: [userId], references: [id])
+  userId            String?             @db.Uuid
+  isPublic          Boolean             @default(false)
+  deckSubscriptions DeckSubscription[]
+  deletedAt         DateTime?
+  cardSchedules     CardSchedule[]
+  ReviewInteraction ReviewInteraction[]
+  ReviewRun         ReviewRun[]
+
+  @@map("decks")
+}
+
+model CardSchedule {
+  id                 String           @id @default(uuid()) @db.Uuid
+  user               User             @relation(fields: [userId], references: [id])
+  userId             String           @db.Uuid
+  card               Card             @relation(fields: [cardId], references: [id])
+  cardId             String           @db.Uuid
+  deck               Deck             @relation(fields: [deckId], references: [id])
+  deckId             String           @db.Uuid
+  deckSubscription   DeckSubscription @relation(fields: [deckSubscriptionId], references: [id])
+  deckSubscriptionId String           @db.Uuid
+
+  due           DateTime          @default(now())
+  stability     Float             @default(0.0)
+  difficulty    Float             @default(0.0)
+  elapsedDays   Int               @default(0)
+  scheduledDays Int               @default(0)
+  reps          Int               @default(0)
+  lapses        Int               @default(0)
+  state         CardScheduleState @default(NEW)
+  lastReview    DateTime          @default(now())
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([userId, cardId])
+  @@index([userId, due])
+  @@map("cardschedules")
+}
+
+model DeckSubscription {
+  id     String @id @default(uuid()) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.Uuid
+  deck   Deck   @relation(fields: [deckId], references: [id])
+  deckId String @db.Uuid
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  cardSchedules CardSchedule[]
+
+  @@unique([userId, deckId])
+  @@map("decksubscription")
+}
+
+model Prompt {
+  id              String        @id @default(uuid()) @db.Uuid
+  type            PromptType
+  text            String
+  language        String        @default("en")
+  default         Boolean       @default(false)
+  modelProvider   ModelProvider @relation(fields: [modelProviderId], references: [id])
+  modelProviderId String        @db.Uuid
+  description     String?
+
+  @@map("prompts")
+}
+
+model ReviewRun {
+  id                 String              @id @default(uuid()) @db.Uuid
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  user               User                @relation(fields: [userId], references: [id])
+  userId             String              @db.Uuid
+  reviewInteractions ReviewInteraction[]
+  deckFilter         Deck?               @relation(fields: [deckId], references: [id])
+  deckId             String?             @db.Uuid
+  tagFilter          String?
+  numberOfCards      Int                 @default(0)
+  numberCorrect      Int                 @default(0)
+  numberWrong        Int                 @default(0)
+
+  @@map("reviewrun")
+}
+
+model ReviewInteraction {
+  id                  String                @id @default(uuid()) @db.Uuid
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  user                User                  @relation(fields: [userId], references: [id])
+  userId              String                @db.Uuid
+  card                Card                  @relation(fields: [cardId], references: [id])
+  cardId              String                @db.Uuid
+  deck                Deck                  @relation(fields: [deckId], references: [id])
+  deckId              String                @db.Uuid
+  type                ReviewInteractionType
+  reviewRun           ReviewRun             @relation(fields: [reviewRunId], references: [id])
+  reviewRunId         String                @db.Uuid
+  content             String
+  inputTokens         Int                   @default(0)
+  outputTokens        Int                   @default(0)
+  ttsUnits            Int                   @default(0)
+  sttUnits            Float                 @default(0.0)
+  llmProvider         ModelProvider?        @relation(fields: [llmProviderId], references: [id], name: "llmProvider")
+  llmProviderId       String?               @db.Uuid
+  sttProvider         ModelProvider?        @relation(fields: [sttProviderId], references: [id], name: "sttProvider")
+  sttProviderId       String?               @db.Uuid
+  ttsProvider         ModelProvider?        @relation(fields: [ttsProviderId], references: [id], name: "ttsProvider")
+  ttsProviderId       String?               @db.Uuid
+  nextUserAction      UserAction            @default(NONE)
+  relatedQuestion     ReviewInteraction?    @relation(fields: [relatedQuestionId], references: [id], name: "relatedQuestion")
+  relatedQuestionId   String?               @db.Uuid
+  relatedInteractions ReviewInteraction[]   @relation("relatedQuestion")
+  ignorePrice         Boolean               @default(false)
+
+  @@map("reviewinteraction")
+}
+
+model ModelProvider {
+  id                    String              @id @default(uuid()) @db.Uuid
+  provider              Provider
+  model                 String
+  modelType             ModelType
+  inputCostNumerator    Int                 @default(0)
+  inputCostDenominator  Int                 @default(1)
+  outputCostNumerator   Int                 @default(0)
+  outputCostDenominator Int                 @default(1)
+  currency              Currency            @default(USD)
+  unit                  Unit                @default(TOKEN)
+  llmInteractions       ReviewInteraction[] @relation("llmProvider")
+  sttInteractions       ReviewInteraction[] @relation("sttProvider")
+  ttsInteractions       ReviewInteraction[] @relation("ttsProvider")
+  default               Boolean             @default(false)
+  prompts               Prompt[]
+
+  @@map("modelprovider")
+}
+
+enum CardScheduleState {
+  NEW
+  LEARNING
+  REVIEW
+  RELEARNING
+}
+
+enum PromptType {
+  EVALUATE_ANSWER
+  INTRO
+  CONVERT_ANKI_CARDS
+  CONVERT_SINGLE_CLOZE_TO_QUESTION
+  FOLLOW_UP
+}
+
+enum ReviewInteractionType {
+  SYSTEM_QUESTION
+  USER_ANSWER
+  SYSTEM_EVALUATION
+  USER_FEEDBACK
+  USER_INQUIRY
+  SYSTEM_INQUIRY_RESPONSE
+}
+
+enum Provider {
+  OPENAI
+  ANTHROPIC
+}
+
+enum ModelType {
+  LLM
+  STT
+  TTS
+}
+
+enum UserAction {
+  NONE
+  GET_NEXT_CARD
+  ALLOW_INQUIRY
+}
+
+enum Currency {
+  USD
+  EUR
+}
+
+enum Unit {
+  TOKEN
+  CHARACTER
+  MINUTE
+  SECOND
+}

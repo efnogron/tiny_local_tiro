@@ -1,0 +1,41 @@
+{
+  "name": "tiny_local_tiro",
+  "version": "1.0.0",
+  "description": "its tiro but smaller",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/efnogron/tiny_local_tiro.git"
+  },
+  "keywords": [
+    "tiro",
+    "cli",
+    "terminal",
+    "document-review",
+    "nlp"
+  ],
+  "author": "luki",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/efnogron/tiny_local_tiro/issues"
+  },
+  "homepage": "https://github.com/efnogron/tiny_local_tiro#readme",
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.1",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "inquirer": "^9.3.4",
+    "openai": "^4.52.3",
+    "prisma": "^5.16.1"
+  }
+}
