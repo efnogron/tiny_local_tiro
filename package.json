@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "serve": "node dist/index.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -25,6 +27,7 @@
   },
   "homepage": "https://github.com/efnogron/tiny_local_tiro#readme",
   "devDependencies": {
+    "@types/inquirer": "^9.0.7",
     "@types/node": "^20.14.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
@@ -33,7 +36,7 @@
     "@prisma/client": "^5.16.1",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
-    "inquirer": "^9.3.4",
+    "inquirer": "^8.2.5",
     "openai": "^4.52.3",
     "prisma": "^5.16.1"
   }
